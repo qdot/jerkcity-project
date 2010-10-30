@@ -44,6 +44,10 @@
 ;; Requires emacs >= 23 because fuck you what year does this look like
 ;; anyways.
 
+;; Note that by order of http://www.jerkcity.com/jerkcity2341.html, I
+;; am now considered to be THE KING (assuming you global-set-key
+;; jerkcity to something.)
+
 ;; History:
 
 ;; 2010-10-28 - Kyle Machulis <kyle@nonpolynomial.com>
