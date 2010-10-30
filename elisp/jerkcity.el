@@ -83,16 +83,15 @@
   "Retreive the latest quote file from the server, and parse it into cookie form."
   (interactive)
   (jerkcity-fetch-dialog)
-  (jerkcity-create-quote-file)
-  )
+  (jerkcity-create-quote-file))
 
 (defun jerkcity-check-dialog-exists ()
   "See if the parsed cookie file exists. If not, prompt user for download."
   (if (not (file-exists-p jerkcity-dialog-file))
-      (if (yes-or-no-p "Jerkcity dialog file not found. Download from server and parse (may block a smidge)?")
-          (jerkcity-get-quotes)
-        nil)
-      t))
+    (if (yes-or-no-p "Jerkcity dialog file not found. Download from server and parse (may block a smidge)?")
+        (jerkcity-get-quotes)
+      nil)
+    t))
 
 (defun jerkcity-fetch-dialog ()
   "Download file from website, save to intermediate file in local user-emacs-directory."
@@ -116,11 +115,11 @@ So just search for :  and split there.
 "
   (save-excursion
     ;; Always assume we want a quote, so it'll start with :
-    (if (string-match ":" quote)
-        (progn
-          (set-buffer (find-file-noselect jerkcity-dialog-file))
-          (insert (cadr (split-string quote ": ")))
-          (insert "\n%%\n")))))
+    (when (string-match ":" quote)
+      (progn
+        (set-buffer (find-file-noselect jerkcity-dialog-file))
+        (insert (cadr (split-string quote ": ")))
+        (insert "\n%%\n")))))
 
 (defun jerkcity-create-quote-file ()
   "Create a cookie formatted quote file based on the XML
@@ -128,15 +127,14 @@ retrieved from the website. Doesn't actually parse XML 'cause I'm
 too stupid to get xml.el to work."
   (save-excursion
     ;; Kill the old dialog file. Hope you weren't editing it.
-    (if (find-buffer-visiting jerkcity-dialog-file)
-        (progn
-          (kill-buffer (find-file-noselect jerkcity-dialog-file))
-          (if (file-exists-p jerkcity-dialog-file)
-              (delete-file jerkcity-dialog-file))
-          ))
+    (when (find-buffer-visiting jerkcity-dialog-file)
+      (progn
+        (kill-buffer (find-file-noselect jerkcity-dialog-file))
+        (if (file-exists-p jerkcity-dialog-file)
+            (delete-file jerkcity-dialog-file))))
     (set-buffer (find-file-noselect jerkcity-dialog-file t))
     (with-auto-compression-mode
-      (progn 
+      (progn
         (set-buffer (find-file-noselect jerkcity-dialog-compressed-file))
         ;; Screw XML parsing, and I don't like dealing with elisp
         ;; regexps. We know where the dialog is. Get it stupidly.
@@ -144,18 +142,17 @@ too stupid to get xml.el to work."
         (while (search-forward "<dialog>\n" nil t)
           (let*
               ;; Find a dialog tag
-              ((quote-start (point-marker))                           
+              ((quote-start (point-marker))
                ;; Find the last tag, then back up
                (quote-end (progn
                             (search-forward "\n</dialog>")
                             (search-backward "\n</dialog>")
-                            (point-marker)
-                            ))
+                            (point-marker)))
                (quote-strings (split-string (buffer-substring-no-properties quote-start quote-end) "\n")))
             (mapc 'jerkcity-insert-quote-into-file quote-strings)))))
-        (set-buffer (find-file-noselect jerkcity-dialog-file))
-        (save-buffer)
-        (kill-buffer (find-file-noselect jerkcity-dialog-file))))
+    (set-buffer (find-file-noselect jerkcity-dialog-file))
+    (save-buffer)
+    (kill-buffer (find-file-noselect jerkcity-dialog-file))))
 
 (defun jerkcity-retrieve-quote ()
   "Get a single random jerkcity quote out of the cookie file"
@@ -164,14 +161,14 @@ too stupid to get xml.el to work."
 (defun jerkcity ()
   "Display a single random jerkcity quote in the minibuffer"
   (interactive)
-  (if (jerkcity-check-dialog-exists)
-      (message (jerkcity-retrieve-quote))))
+  (when (jerkcity-check-dialog-exists)
+    (message (jerkcity-retrieve-quote))))
 
 (defun jerkcity-insert ()
   "Insert a single random jerkcity quote in the current buffer"
   (interactive)
-  (if (jerkcity-check-dialog-exists)
-      (insert (jerkcity-retrieve-quote))))
+  (when (jerkcity-check-dialog-exists)
+    (insert (jerkcity-retrieve-quote))))
 
 (defun jerkcity-find-random-quote(match-regexp)
   "Given a regexp, fuck up the cookie vector then kick it until
@@ -180,41 +177,40 @@ showed it /good/."
   (let
       ((cookie-vector (cookie-snarf jerkcity-dialog-file jerkcity-load-message jerkcity-after-load-message)))
     (shuffle-vector cookie-vector)
-    (let 
+    (let
         ((jerkcity-matched-quotes (delq nil (mapcar (lambda (x) (and (string-match match-regexp x) x)) cookie-vector))))
-      (nth (random (length jerkcity-matched-quotes)) jerkcity-matched-quotes))
-    ))
+      (nth (random (length jerkcity-matched-quotes)) jerkcity-matched-quotes))))
 
 (defun jerkcity-character-subst (nick)
-  "Return a random string in which a character reference of the format 
+  "Return a random string in which a character reference of the format
 
 T NAME
 
 is used. Pick NAME at random from the jerkcity-character-names
 list. Replace name with uppercased argument."
-       (let*
-           ((jerkcity-name (nth (random (length jerkcity-character-names)) jerkcity-character-names))
-            (jerkcity-t-string (format "T %s" jerkcity-name))
-            (jerkcity-character-quote (jerkcity-find-random-quote jerkcity-t-string))
-            )
-         (replace-regexp-in-string jerkcity-name (upcase nick) jerkcity-character-quote)))
+  (let*
+      ((jerkcity-name (nth (random (length jerkcity-character-names)) jerkcity-character-names))
+       (jerkcity-t-string (format "T %s" jerkcity-name))
+       (jerkcity-character-quote (jerkcity-find-random-quote jerkcity-t-string))
+       )
+    (replace-regexp-in-string jerkcity-name (upcase nick) jerkcity-character-quote)))
 
 (defun erc-cmd-JERKCITY ()
   "Print a random quote to a ERC query buffer"
-  (if (jerkcity-check-dialog-exists)      
-        (erc-send-message (jerkcity-retrieve-quote))))
+  (when (jerkcity-check-dialog-exists)
+    (erc-send-message (jerkcity-retrieve-quote))))
 
 (defun erc-cmd-JERKCITYALSO ()
   "Print a random quote starting with ALSO to a ERC query buffer"
-  (if (jerkcity-check-dialog-exists)      
-        (erc-send-message (jerkcity-find-random-quote "^ALSO"))))
+  (when (jerkcity-check-dialog-exists)
+    (erc-send-message (jerkcity-find-random-quote "^ALSO"))))
 
 (defun erc-cmd-JERKCITYQUERY (&optional nick)
   "Print a random character quote to a ERC query buffer, with the
 character name replaced with the buffer name or requested nick"
-  (if (jerkcity-check-dialog-exists)      
-      (if nick
-          (erc-send-message (jerkcity-character-subst nick))
-        (erc-send-message (jerkcity-character-subst (buffer-name (current-buffer)))))))
+  (when (jerkcity-check-dialog-exists)
+    (if nick
+        (erc-send-message (jerkcity-character-subst nick))
+      (erc-send-message (jerkcity-character-subst (buffer-name (current-buffer)))))))
 
 (provide 'jerkcity)
