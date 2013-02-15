@@ -195,22 +195,4 @@ list. Replace name with uppercased argument."
        )
     (replace-regexp-in-string jerkcity-name (upcase nick) jerkcity-character-quote)))
 
-(defun erc-cmd-JERKCITY ()
-  "Print a random quote to a ERC query buffer"
-  (when (jerkcity-check-dialog-exists)
-    (erc-send-message (jerkcity-retrieve-quote))))
-
-(defun erc-cmd-JERKCITYALSO ()
-  "Print a random quote starting with ALSO to a ERC query buffer"
-  (when (jerkcity-check-dialog-exists)
-    (erc-send-message (jerkcity-find-random-quote "^ALSO"))))
-
-(defun erc-cmd-JERKCITYQUERY (&optional nick)
-  "Print a random character quote to a ERC query buffer, with the
-character name replaced with the buffer name or requested nick"
-  (when (jerkcity-check-dialog-exists)
-    (if nick
-        (erc-send-message (jerkcity-character-subst nick))
-      (erc-send-message (jerkcity-character-subst (buffer-name (current-buffer)))))))
-
 (provide 'jerkcity)
