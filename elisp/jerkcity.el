@@ -67,13 +67,21 @@
   :type 'file
   :group 'jerkcity)
 
-(defconst jerkcity-character-names (list "DEUCE" "ATANDT" "SPIGOT" "PANTS" "RANDS" "NET") "Names of characters in the quote file, for replacement")
-(defconst jerkcity-load-message "Dongsing..." "Message to show when cookie is parsing file (rarely happens on moderns machines.)")
-(defconst jerkcity-after-load-message "Dongsing complete. Emacs now donged. HGBHGBLBG at will."  "Message to show when cookie is finished parsing file.")
+(defcustom jerkcity-character-names
+  (list "DEUCE" "ATANDT" "SPIGOT" "PANTS" "RANDS" "NET")
+  "Names of characters in the quote file, for replacement"
+  :type '(repeat string)
+  :group 'jerkcity)
+
+(defconst jerkcity-load-message "Dongsing..."
+  "Message to show when cookie is parsing file.")
+(defconst jerkcity-after-load-message "complete. HGBHGBLBG at will."
+  "Message to show when cookie is finished parsing file.")
 
 (defun jerkcity-retrieve-quote ()
   "Get a single random jerkcity quote out of the cookie file"
-  (cookie jerkcity-dialog-file jerkcity-load-message jerkcity-after-load-message))
+  (cookie jerkcity-dialog-file
+          jerkcity-load-message jerkcity-after-load-message))
 
 (defun jerkcity ()
   "Display a single random jerkcity quote in the minibuffer"
@@ -92,11 +100,16 @@
 it spits out something that applies. Yeah. You showed it. You
 showed it /good/."
   (let
-      ((cookie-vector (cookie-snarf jerkcity-dialog-file jerkcity-load-message jerkcity-after-load-message)))
+      ((cookie-vector
+        (cookie-snarf jerkcity-dialog-file
+                      jerkcity-load-message jerkcity-after-load-message)))
     (shuffle-vector cookie-vector)
     (let
-        ((jerkcity-matched-quotes (delq nil (mapcar (lambda (x) (and (string-match match-regexp x) x)) cookie-vector))))
-      (nth (random (length jerkcity-matched-quotes)) jerkcity-matched-quotes))))
+        ((jerkcity-matched-quotes
+          (delq nil (mapcar (lambda (x) (and (string-match match-regexp x) x))
+                            cookie-vector))))
+      (nth (random (length jerkcity-matched-quotes))
+           jerkcity-matched-quotes))))
 
 (defun jerkcity-character-subst (nick)
   "Return a random string in which a character reference of the format
@@ -106,10 +119,12 @@ T NAME
 is used. Pick NAME at random from the jerkcity-character-names
 list. Replace name with uppercased argument."
   (let*
-      ((jerkcity-name (nth (random (length jerkcity-character-names)) jerkcity-character-names))
+      ((jerkcity-name (nth (random (length jerkcity-character-names))
+                           jerkcity-character-names))
        (jerkcity-t-string (format "T %s" jerkcity-name))
-       (jerkcity-character-quote (jerkcity-find-random-quote jerkcity-t-string))
-       )
-    (replace-regexp-in-string jerkcity-name (upcase nick) jerkcity-character-quote)))
+       (jerkcity-character-quote
+        (jerkcity-find-random-quote jerkcity-t-string)))
+    (replace-regexp-in-string jerkcity-name (upcase nick)
+                              jerkcity-character-quote)))
 
 (provide 'jerkcity)
