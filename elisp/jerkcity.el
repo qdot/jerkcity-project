@@ -49,7 +49,8 @@
 ;; jerkcity to something.)
 
 ;; History:
-
+;; 2013-02-16 - Pi <pi+git@pihost.us>
+;; - Split into pieces
 ;; 2010-10-28 - Kyle Machulis <kyle@nonpolynomial.com>
 ;; - Got Food Poisoning
 ;; - Decided to make myself feel better by doing stupid elisp tricks
@@ -60,99 +61,15 @@
   "Dongs, Bongs, and Jerkcity Settings. Mostly dongs."
   :group 'games)
 
-(defcustom jerkcity-dialog-compressed-file (concat (expand-file-name user-emacs-directory) "jerkcity-dialog.xml.gz")
-  "File containing jerkcity quotes, as fetched from server."
-  :type 'file
-  :group 'jerkcity)
-
-(defcustom jerkcity-dialog-file (concat (expand-file-name user-emacs-directory) "jerkcity-dialog.txt")
+(defcustom jerkcity-dialog-file
+  (concat (expand-file-name user-emacs-directory) "jerkcity.lines")
   "File containing jerkcity quotes, as parsed into cookie readable form."
   :type 'file
-  :group 'jerkcity)
-
-(defcustom jerkcity-dialog-url "http://www.jerkcity.com/dialog.xml.gz"
-  "URL to fetch dialog from if it does not exist locally"
-  :type 'url
   :group 'jerkcity)
 
 (defconst jerkcity-character-names (list "DEUCE" "ATANDT" "SPIGOT" "PANTS" "RANDS" "NET") "Names of characters in the quote file, for replacement")
 (defconst jerkcity-load-message "Dongsing..." "Message to show when cookie is parsing file (rarely happens on moderns machines.)")
 (defconst jerkcity-after-load-message "Dongsing complete. Emacs now donged. HGBHGBLBG at will."  "Message to show when cookie is finished parsing file.")
-
-(defun jerkcity-get-quotes()
-  "Retreive the latest quote file from the server, and parse it into cookie form."
-  (interactive)
-  (jerkcity-fetch-dialog)
-  (jerkcity-create-quote-file))
-
-(defun jerkcity-check-dialog-exists ()
-  "See if the parsed cookie file exists. If not, prompt user for download."
-  (if (not (file-exists-p jerkcity-dialog-file))
-    (if (yes-or-no-p "Jerkcity dialog file not found. Download from server and parse (may block a smidge)?")
-        (jerkcity-get-quotes)
-      nil)
-    t))
-
-(defun jerkcity-fetch-dialog ()
-  "Download file from website, save to intermediate file in local user-emacs-directory."
-  (save-excursion
-    (set-buffer (url-retrieve-synchronously jerkcity-dialog-url))
-    ;; Remove HTTP headers. Thanks install-elisp.el!
-    (goto-char (point-min))
-    (re-search-forward "^$" nil 'move)
-    (delete-region (point-min) (1+ (point)))
-    (write-file jerkcity-dialog-compressed-file)
-    (kill-buffer)
-    (message "Jerkcity file retreived successfully")))
-
-(defun jerkcity-insert-quote-into-file (quote)
-  "Given a quote string, split out the reference. Quotes in the
-  XML files are of the format
-
-NAME: QUOTE
-
-So just search for :  and split there.
-"
-  (save-excursion
-    ;; Always assume we want a quote, so it'll start with :
-    (when (string-match ":" quote)
-      (progn
-        (set-buffer (find-file-noselect jerkcity-dialog-file))
-        (insert (cadr (split-string quote ": ")))
-        (insert "\n%%\n")))))
-
-(defun jerkcity-create-quote-file ()
-  "Create a cookie formatted quote file based on the XML
-retrieved from the website. Doesn't actually parse XML 'cause I'm
-too stupid to get xml.el to work."
-  (save-excursion
-    ;; Kill the old dialog file. Hope you weren't editing it.
-    (when (find-buffer-visiting jerkcity-dialog-file)
-      (progn
-        (kill-buffer (find-file-noselect jerkcity-dialog-file))
-        (if (file-exists-p jerkcity-dialog-file)
-            (delete-file jerkcity-dialog-file))))
-    (set-buffer (find-file-noselect jerkcity-dialog-file t))
-    (with-auto-compression-mode
-      (progn
-        (set-buffer (find-file-noselect jerkcity-dialog-compressed-file))
-        ;; Screw XML parsing, and I don't like dealing with elisp
-        ;; regexps. We know where the dialog is. Get it stupidly.
-        (goto-char (point-min))
-        (while (search-forward "<dialog>\n" nil t)
-          (let*
-              ;; Find a dialog tag
-              ((quote-start (point-marker))
-               ;; Find the last tag, then back up
-               (quote-end (progn
-                            (search-forward "\n</dialog>")
-                            (search-backward "\n</dialog>")
-                            (point-marker)))
-               (quote-strings (split-string (buffer-substring-no-properties quote-start quote-end) "\n")))
-            (mapc 'jerkcity-insert-quote-into-file quote-strings)))))
-    (set-buffer (find-file-noselect jerkcity-dialog-file))
-    (save-buffer)
-    (kill-buffer (find-file-noselect jerkcity-dialog-file))))
 
 (defun jerkcity-retrieve-quote ()
   "Get a single random jerkcity quote out of the cookie file"
@@ -170,7 +87,7 @@ too stupid to get xml.el to work."
   (when (jerkcity-check-dialog-exists)
     (insert (jerkcity-retrieve-quote))))
 
-(defun jerkcity-find-random-quote(match-regexp)
+(defun jerkcity-find-random-quote (match-regexp)
   "Given a regexp, fuck up the cookie vector then kick it until
 it spits out something that applies. Yeah. You showed it. You
 showed it /good/."
