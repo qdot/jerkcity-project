@@ -127,4 +127,17 @@ list. Replace name with uppercased argument."
     (replace-regexp-in-string jerkcity-name (upcase nick)
                               jerkcity-character-quote)))
 
+(defun psychoanalyze-jerkcity ()
+  "T FREUD MY TRAIN SPURTED INTO THE TUNNEL DOES THIS MEAN I'M GAY"
+  (interactive)
+  (doctor)
+  (message "")
+  (switch-to-buffer "*doctor*")
+  (sit-for 0)
+  (while (not (input-pending-p))
+    (jerkcity-insert)
+    (sit-for 0)
+    (doctor-ret-or-read 1)
+    (doctor-ret-or-read 1)))
+
 (provide 'jerkcity)
