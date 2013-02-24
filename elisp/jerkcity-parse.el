@@ -60,14 +60,6 @@ So just search for :  and split there.
   (jerkcity-fetch-dialog)
   (jerkcity-create-quote-file))
 
-(defun jerkcity-check-dialog-exists ()
-  "See if the parsed cookie file exists. If not, prompt user for download."
-  (if (not (file-exists-p jerkcity-dialog-file))
-    (if (yes-or-no-p "Jerkcity dialog file not found. Download from server and parse (may block a smidge)?")
-        (jerkcity-get-quotes)
-      nil)
-    t))
-
 (defun jerkcity-fetch-dialog ()
   "Download file from website, save to intermediate file in local user-emacs-directory."
   (save-excursion

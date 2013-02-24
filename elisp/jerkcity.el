@@ -127,6 +127,17 @@ list. Replace name with uppercased argument."
     (replace-regexp-in-string jerkcity-name (upcase nick)
                               jerkcity-character-quote)))
 
+; XXX the parser kinda sucks. someone who likes xml should fix this.
+(defun jerkcity-check-dialog-exists ()
+  "See if the parsed cookie file exists. If not, prompt user for download."
+  (if (not (file-exists-p jerkcity-dialog-file))
+    (if (yes-or-no-p "Jerkcity dialog file not found. Download from server and parse (may block a smidge)?")
+        (progn
+          (require 'jerkcity-parse)
+          (jerkcity-get-quotes))
+      nil)
+    t))
+
 (defun psychoanalyze-jerkcity ()
   "T FREUD MY TRAIN SPURTED INTO THE TUNNEL DOES THIS MEAN I'M GAY"
   (interactive)
