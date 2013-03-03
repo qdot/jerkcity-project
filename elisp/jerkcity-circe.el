@@ -43,7 +43,7 @@
 with their name replaced with the target, or requested nick"
   (if (not circe-chat-target)
       (circe-server-message "No target for current buffer")
-    (if nick
+    (if (> (length nick) 0)
         (circe-command-SAY (jerkcity-character-subst nick))
       (circe-command-SAY (jerkcity-character-subst circe-chat-target)))))
 
